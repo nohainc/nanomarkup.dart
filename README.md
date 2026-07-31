@@ -1,6 +1,7 @@
 # Nano Markup for Dart
 
 [![CI](https://github.com/nohainc/nanomarkup.dart/actions/workflows/ci.yml/badge.svg)](https://github.com/nohainc/nanomarkup.dart/actions/workflows/ci.yml)
+[![pub package](https://img.shields.io/pub/v/nanomarkup.svg)](https://pub.dev/packages/nanomarkup)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 `nanomarkup` is a zero-runtime-dependency Dart decoder and encoder for
@@ -10,11 +11,10 @@ and server applications, Dart web applications, and Flutter without depending
 on Flutter.
 
 Version 1.0.0 implements the stable **Nano Markup 1.0.0** decoder and writer
-profiles. The first pub.dev release is prepared but has not yet been published.
+profiles. Releases are published as the
+[`nanomarkup` package on pub.dev](https://pub.dev/packages/nanomarkup).
 
 ## Installation
-
-After the first release is published:
 
 ```console
 dart pub add nanomarkup
