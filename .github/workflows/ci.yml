@@ -1,0 +1,139 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Dart ${{ matrix.sdk }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            sdk: 3.12.0
+          - os: ubuntu-latest
+            sdk: stable
+          - os: macos-latest
+            sdk: stable
+          - os: windows-latest
+            sdk: stable
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ matrix.sdk }}
+      - run: dart pub get
+      - run: dart format --output=none --set-exit-if-changed .
+      - run: dart analyze
+      - run: dart test --exclude-tags browser
+
+  conformance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - run: dart pub get
+      - run: python3 spec/tests/run_conformance.py 'dart run tool/conformance.dart'
+
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - run: dart pub get
+      - run: dart test --platform chrome test/browser_smoke_test.dart
+
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - run: dart pub get
+      - run: dart run example/basic.dart
+      - run: dart doc --output build/doc
+      - run: dart compile exe bin/nanomarkup.dart -o build/nanomarkup
+      - run: build/nanomarkup --version
+      - run: dart pub publish --dry-run
+
+  interoperability:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          path: dart
+          submodules: true
+      - uses: actions/checkout@v6
+        with:
+          repository: nohainc/nanomarkup.python
+          ref: v1.0.0
+          path: interoperability/python
+      - uses: actions/checkout@v6
+        with:
+          repository: nohainc/nanomarkup.go
+          ref: v1.0.0
+          path: interoperability/go
+      - uses: actions/checkout@v6
+        with:
+          repository: nohainc/nanomarkup.javascript
+          ref: v1.0.0
+          path: interoperability/javascript
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.24"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.9.0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: pnpm
+          cache-dependency-path: interoperability/javascript/pnpm-lock.yaml
+      - run: dart pub get
+        working-directory: dart
+      - run: dart compile exe tool/conformance.dart -o build/dart-conformance
+        working-directory: dart
+      - run: python -m pip install -e interoperability/python
+      - run: go build -o ../../dart/build/go-conformance ./cmd/conformance
+        working-directory: interoperability/go
+      - run: pnpm install --frozen-lockfile
+        working-directory: interoperability/javascript
+      - run: pnpm run build
+        working-directory: interoperability/javascript
+      - name: Cross-read all four writers and decoders
+        run: >-
+          python3 dart/spec/tests/run_conformance.py
+          'dart/build/dart-conformance'
+          'python3 interoperability/python/tests/adapter.py'
+          'dart/build/go-conformance'
+          'node interoperability/javascript/dist/esm/conformance.js'

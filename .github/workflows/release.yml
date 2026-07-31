@@ -1,0 +1,61 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+          fetch-depth: 0
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - run: dart pub get
+      - run: dart format --output=none --set-exit-if-changed .
+      - run: dart analyze
+      - run: dart test --exclude-tags browser
+      - run: python3 spec/tests/run_conformance.py 'dart run tool/conformance.dart'
+      - run: dart test --platform chrome test/browser_smoke_test.dart
+      - run: dart doc --output build/doc
+      - run: dart pub publish --dry-run
+      - run: dart run tool/verify_release.dart
+
+  publish:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: pub.dev
+      url: https://pub.dev/packages/nanomarkup
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+      - uses: dart-lang/setup-dart@v1
+      - run: dart pub get
+      - run: dart run tool/verify_release.dart
+      - run: dart pub publish --force
+
+  github-release:
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true

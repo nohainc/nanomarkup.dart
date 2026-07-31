@@ -1,0 +1,14 @@
+.github/
+.dart_tool/
+.gitmodules
+analysis_options.yaml
+build/
+CONTRIBUTING.md
+coverage/
+doc/
+pubspec.lock
+RELEASING.md
+SECURITY.md
+spec/
+test/
+tool/

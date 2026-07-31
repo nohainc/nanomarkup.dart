@@ -1,0 +1,5 @@
+# Every repository change requires approval from the repository owner.
+* @nohainc
+
+# Explicitly protect this ownership policy.
+/.github/CODEOWNERS @nohainc

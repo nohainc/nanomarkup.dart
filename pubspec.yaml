@@ -1,0 +1,23 @@
+name: nanomarkup
+version: 1.0.0
+description: A zero-dependency Dart decoder and encoder for Nano Markup 1.0.0.
+homepage: https://nohainc.github.io/nanomarkup.github.com/
+repository: https://github.com/nohainc/nanomarkup.dart
+issue_tracker: https://github.com/nohainc/nanomarkup.dart/issues
+
+environment:
+  sdk: ">=3.12.0 <4.0.0"
+
+executables:
+  nanomarkup:
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.26.3
+
+topics:
+  - nanomarkup
+  - parser
+  - serialization
+  - data-format
+  - markup
