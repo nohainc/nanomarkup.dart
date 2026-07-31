@@ -2,6 +2,10 @@
 
 ## One-time pub.dev bootstrap
 
+This bootstrap was completed for `nanomarkup` before the stable `1.0.0`
+release. Manual publishing is now disabled; stable releases use the protected
+`pub.dev` GitHub environment and pub.dev OIDC trusted publishing.
+
 Pub.dev only permits automated publishing for an existing package. Before the
 first stable release:
 
