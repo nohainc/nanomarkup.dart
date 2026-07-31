@@ -117,14 +117,11 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version: "1.24"
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 11.9.0
+          cache: false
       - uses: actions/setup-node@v6
         with:
           node-version: "24"
-          cache: pnpm
-          cache-dependency-path: interoperability/javascript/pnpm-lock.yaml
+      - run: npm install --global pnpm@11.9.0
       - run: dart pub get
         working-directory: dart
       - run: dart compile exe tool/conformance.dart -o dart-conformance
