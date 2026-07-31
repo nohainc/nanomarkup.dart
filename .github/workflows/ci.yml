@@ -27,14 +27,20 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          submodules: true
+          # The official corpus intentionally contains a NUL-named fixture,
+          # which Git for Windows cannot check out. The complete corpus still
+          # runs on Linux and macOS; Windows exercises the portable core API.
+          submodules: ${{ matrix.os != 'windows-latest' }}
       - uses: dart-lang/setup-dart@v1
         with:
           sdk: ${{ matrix.sdk }}
       - run: dart pub get
       - run: dart format --output=none --set-exit-if-changed .
       - run: dart analyze
-      - run: dart test --exclude-tags browser
+      - if: runner.os != 'Windows'
+        run: dart test --exclude-tags browser
+      - if: runner.os == 'Windows'
+        run: dart test test/api_test.dart
 
   conformance:
     runs-on: ubuntu-latest
@@ -121,10 +127,10 @@ jobs:
           cache-dependency-path: interoperability/javascript/pnpm-lock.yaml
       - run: dart pub get
         working-directory: dart
-      - run: dart compile exe tool/conformance.dart -o build/dart-conformance
+      - run: dart compile exe tool/conformance.dart -o dart-conformance
         working-directory: dart
       - run: python -m pip install -e interoperability/python
-      - run: go build -o ../../dart/build/go-conformance ./cmd/conformance
+      - run: go build -o ../../dart/go-conformance ./cmd/conformance
         working-directory: interoperability/go
       - run: pnpm install --frozen-lockfile
         working-directory: interoperability/javascript
@@ -133,7 +139,7 @@ jobs:
       - name: Cross-read all four writers and decoders
         run: >-
           python3 dart/spec/tests/run_conformance.py
-          'dart/build/dart-conformance'
+          'dart/dart-conformance'
           'python3 interoperability/python/tests/adapter.py'
-          'dart/build/go-conformance'
+          'dart/go-conformance'
           'node interoperability/javascript/dist/esm/conformance.js'
